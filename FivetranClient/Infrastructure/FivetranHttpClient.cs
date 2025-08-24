@@ -5,6 +5,7 @@ namespace FivetranClient.Infrastructure;
 
 public class FivetranHttpClient : HttpClient
 {
+    private const string DefaultUserAgent = "MyApp/1.0";
     public FivetranHttpClient(Uri baseAddress, string apiKey, string apiSecret, TimeSpan timeout)
     {
         if (timeout.Ticks <= 0)
@@ -17,7 +18,7 @@ public class FivetranHttpClient : HttpClient
         this.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         // we need to set Agent Header because otherwise sometimes it may be blocked by the server
         // see: https://repost.aws/knowledge-center/waf-block-http-requests-no-user-agent
-        this.DefaultRequestHeaders.UserAgent.ParseAdd("aseduigbn");
+        this.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
         this.Timeout = timeout;
     }
 
