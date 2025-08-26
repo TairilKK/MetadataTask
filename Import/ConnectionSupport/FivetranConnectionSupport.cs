@@ -13,9 +13,9 @@ public class FivetranConnectionSupport : IConnectionSupport
     public object? GetConnectionDetailsForSelection()
     {
         Console.Write("Provide your Fivetran API Key: ");
-        var apiKey = Console.ReadLine() ?? throw new ArgumentNullException();
+        var apiKey = Console.ReadLine() ?? throw new ArgumentNullException("apiKey", "Api key cannot be null.");
         Console.Write("Provide your Fivetran API Secret: ");
-        var apiSecret = Console.ReadLine() ?? throw new ArgumentNullException();
+        var apiSecret = Console.ReadLine() ?? throw new ArgumentNullException("apiSecret", "Api secret cannot be null.");
 
         return new FivetranConnectionDetailsForSelection(apiKey, apiSecret);
     }
