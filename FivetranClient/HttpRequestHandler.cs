@@ -29,9 +29,9 @@ public class HttpRequestHandler
 
     public async Task<HttpResponseMessage> GetAsync(string url, CancellationToken cancellationToken)
     {
-        return _responseCache.GetOrAdd(
+        return await _responseCache.GetOrAddAsync(
             url,
-            () => this._GetAsync(url, cancellationToken).Result,
+            async () => await this._GetAsync(url, cancellationToken),
             TimeSpan.FromMinutes(60));
     }
 
