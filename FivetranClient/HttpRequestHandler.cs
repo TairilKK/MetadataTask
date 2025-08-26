@@ -37,40 +37,48 @@ public class HttpRequestHandler
 
     private async Task<HttpResponseMessage> _GetAsync(string url, CancellationToken cancellationToken)
     {
-        if (this._semaphore is not null)
+        while (true)
         {
-            await this._semaphore.WaitAsync(cancellationToken);
-        }
-
-        TimeSpan timeToWait;
-        lock (this._lock)
-        {
-            timeToWait = this._retryAfterTime - DateTime.UtcNow;
-        }
-
-        if (timeToWait > TimeSpan.Zero)
-        {
-            await Task.Delay(timeToWait, cancellationToken);
-        }
-
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var response = await this._client.GetAsync(new Uri(url, UriKind.Relative), cancellationToken);
-        response.EnsureSuccessStatusCode();
-        if (response.StatusCode is HttpStatusCode.TooManyRequests)
-        {
-            var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(60);
-
-            lock (this._lock)
+            if (_semaphore is not null)
             {
-                this._retryAfterTime = DateTime.UtcNow.Add(retryAfter);
+                await _semaphore.WaitAsync(cancellationToken);
             }
 
-            // new request will wait for the specified time before retrying
-            return await this._GetAsync(url, cancellationToken);
-        }
+            try
+            {
+                TimeSpan wait;
+                lock (_lock)
+                {
+                    wait = _retryAfterTime - DateTime.UtcNow;
+                }
 
-        this._semaphore?.Release();
-        return response;
+                if (wait > TimeSpan.Zero)
+                {
+                    await Task.Delay(wait, cancellationToken);
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var response = await _client.GetAsync(url, cancellationToken);
+
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(60);
+                    lock (_lock)
+                    {
+                        _retryAfterTime = DateTime.UtcNow.Add(retryAfter);
+                    }
+
+                    continue;
+                }
+
+                response.EnsureSuccessStatusCode();
+                return response;
+            }
+            finally
+            {
+                _semaphore?.Release();
+            }
+        }
     }
 }
