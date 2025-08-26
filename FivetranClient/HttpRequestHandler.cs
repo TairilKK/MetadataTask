@@ -1,5 +1,5 @@
-﻿using System.Net;
-using FivetranClient.Infrastructure;
+﻿using FivetranClient.Infrastructure;
+using System.Net;
 
 namespace FivetranClient;
 
@@ -23,7 +23,7 @@ public class HttpRequestHandler
         this._client = client;
         if (maxConcurrentRequests > 0)
         {
-            this._semaphore = new SemaphoreSlim(0, maxConcurrentRequests);
+            this._semaphore = new SemaphoreSlim(maxConcurrentRequests, maxConcurrentRequests);
         }
     }
 
