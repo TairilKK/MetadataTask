@@ -1,8 +1,10 @@
-﻿namespace FivetranClient.Infrastructure;
+﻿using System.Collections.Concurrent;
+
+namespace FivetranClient.Infrastructure;
 
 public class TtlDictionary<TKey, TValue> where TKey : notnull
 {
-    private readonly Dictionary<TKey, (TValue, DateTime)> _dictionary = new();
+    private readonly ConcurrentDictionary<TKey, (TValue, DateTime)> _dictionary = new();
 
     public TValue GetOrAdd(TKey key, Func<TValue> valueFactory, TimeSpan ttl)
     {
@@ -13,7 +15,7 @@ public class TtlDictionary<TKey, TValue> where TKey : notnull
                 return entry.Item1;
             }
 
-            _dictionary.Remove(key);
+            _dictionary.TryRemove(key, out _);
         }
 
         var value = valueFactory();
@@ -27,7 +29,7 @@ public class TtlDictionary<TKey, TValue> where TKey : notnull
             if (DateTime.UtcNow < entry.Item2)
                 return entry.Item1;
 
-            _dictionary.Remove(key);
+            _dictionary.TryRemove(key, out _);
         }
 
         var value = await valueFactory();
