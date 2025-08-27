@@ -1,7 +1,7 @@
-﻿using System.Net;
+﻿using FivetranClient.Models;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using FivetranClient.Models;
 
 namespace FivetranClient.Fetchers;
 
@@ -20,9 +20,12 @@ public sealed class PaginatedFetcher(HttpRequestHandler requestHandler) : BaseFe
         CancellationToken cancellationToken,
         string? cursor = null)
     {
-        var response = cursor is null
-            ? await base.RequestHandler.GetAsync($"{endpoint}?limit={PageSize}", cancellationToken)
-            : await base.RequestHandler.GetAsync($"{endpoint}?limit={PageSize}&cursor={WebUtility.UrlEncode(cursor)}", cancellationToken);
+        var url = cursor is null
+            ? $"{endpoint}?limit={PageSize}"
+            : $"{endpoint}?limit={PageSize}&cursor={WebUtility.UrlEncode(cursor)}";
+
+        var response = await base.RequestHandler.GetAsync(url, cancellationToken);
+
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
         return JsonSerializer.Deserialize<PaginatedRoot<T>>(content, SerializerOptions);
     }
